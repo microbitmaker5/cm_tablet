@@ -364,7 +364,7 @@ function longGame() {
             e.preventDefault();
             bg.style.display = "block";
             pressTimer = setInterval(() => {
-                p += 5;
+                p += 10;
                 fill.style.width = p + "%";
                 if(p >= 100) {
                     clearInterval(pressTimer);
