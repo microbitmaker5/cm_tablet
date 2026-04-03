@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>청미르 탐험대 🐉</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap');
+
+:root {
+    --primary: #6a5af9;
+    --bg-gradient: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+}
+
+body {
+    font-family: 'Gaegu', cursive;
+    background: var(--bg-gradient);
+    margin: 0;
+    overflow: hidden;
+    user-select: none;
+    touch-action: none;
+}
+
+#main-menu {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    height: 100vh;
+}
+
+h1 {
+    color: #ffffff;
+    font-size: 50px;
+    text-shadow: 3px 3px 0px #4a90e2;
+    margin: 20px 0 10px;
+}
+
+.sticker-board {
+    background: white;
+    padding: 10px 30px;
+    border-radius: 50px;
+    font-size: 28px;
+    box-shadow: 0 8px 0 rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    border: 4px solid #6a5af9;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    width: 100%;
+    max-width: 500px;
+}
+
+.card {
+    border-radius: 20px;
+    padding: 15px;
+    font-size: 22px;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    text-align: center;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.card:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.15); }
+
+.pink { background: #ff7eb9; }
+.green { background: #4ecdc4; }
+.blue { background: #45aaf2; }
+.yellow { background: #f7b731; }
+.purple { background: #a55eea; }
+
+/* 게임 공통 */
+#game {
+    display: none;
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+}
+
+.game-header {
+    position: absolute;
+    top: 0; left: 0; width: 100%;
+    padding: 10px;
+    background: rgba(255,255,255,0.7);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+    box-sizing: border-box;
+}
+
+.home-btn {
+    padding: 8px 15px;
+    background: #ff5252;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 18px;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.obj {
+    position: absolute;
+    font-size: 70px;
+    cursor: pointer;
+    user-select: none;
+    touch-action: none;
+    z-index: 10;
+}
+
+/* ⚽ 축구공 특수 디자인 */
+.fancy-ball {
+    width: 80px;
+    height: 80px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 50px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2), inset -5px -5px 15px rgba(0,0,0,0.1);
+    border: 3px solid #333;
+    animation: rotateBall 5s linear infinite;
+}
+
+@keyframes rotateBall {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* 🥅 골대 */
+.goal {
+    position: absolute;
+    font-size: 110px;
+    z-index: 5;
+    transition: all 0.5s ease;
+}
+.goal.glow { transform: scale(1.3); filter: drop-shadow(0 0 30px gold); }
+
+/* 🌊 바다 생물 애니메이션 */
+@keyframes swim {
+    0% { transform: translateX(0) rotate(0deg); }
+    50% { transform: translateX(20px) rotate(5deg); }
+    100% { transform: translateX(0) rotate(0deg); }
+}
+.swimming { animation: swim 3s ease-in-out infinite; display: inline-block; }
+
+/* 게이지 */
+.prog-bg {
+    position: absolute;
+    bottom: -25px; left: 50%;
+    transform: translateX(-50%);
+    width: 80px; height: 12px;
+    background: #eee;
+    border-radius: 10px;
+    display: none;
+    border: 2px solid #333;
+}
+.prog-fill { height: 100%; background: #4ecdc4; width: 0%; border-radius: 8px; }
+
+@keyframes pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.4); }
+    100% { transform: scale(0); opacity: 0; }
+}
+.popped { animation: pop 0.3s forwards; }
+</style>
+</head>
+
+<body>
+
+<div id="main-menu">
+    <h1>🐉 청미르 탐험대</h1>
+    <div class="sticker-board">나의 황금별: <span id="stickers">⭐ 0</span></div>
+    
+    <div class="grid">
+        <div class="card pink" onclick="startGame('tap')">🎈<br>풍선 팡팡!</div>
+        <div class="card green" onclick="startGame('double')">🐱<br>친구 깨우기</div>
+        <div class="card blue" onclick="startGame('scroll')">🌊<br>바다 탐험</div>
+        <div class="card yellow" onclick="startGame('long')">🎁<br>선물상자</div>
+        <div class="card purple" onclick="startGame('drag')">⚽<br>슈팅 골인!</div>
+    </div>
+</div>
+
+<div id="game"></div>
+
+<script>
+let sticker = 0;
+let gameIntervals = []; 
+const gameView = document.getElementById("game");
+const menuView = document.getElementById("main-menu");
+
+function playSound(freq) {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
+    osc.stop(ctx.currentTime + 0.5);
+}
+
+function addSticker() {
+    sticker++;
+    document.getElementById("stickers").innerText = "⭐ " + sticker;
+    playSound(800);
+}
+
+function cleanup() {
+    gameIntervals.forEach(clearInterval);
+    gameIntervals = [];
+    gameView.innerHTML = "";
+    gameView.onscroll = null;
+    gameView.style.overflowY = "hidden";
+    document.body.style.overflowY = "hidden";
+}
+
+function goHome() {
+    cleanup();
+    gameView.style.display = "none";
+    menuView.style.display = "flex";
+}
+
+function startGame(type) {
+    cleanup();
+    menuView.style.display = "none";
+    gameView.style.display = "block";
+    gameView.innerHTML = `
+        <div class="game-header">
+            <span id="game-title" style="font-size:22px; font-weight:bold;"></span>
+            <button class="home-btn" onclick="goHome()">그만하기 🏠</button>
+        </div>
+    `;
+
+    if(type === 'tap') tapGame();
+    else if(type === 'double') doubleGame();
+    else if(type === 'scroll') scrollGame();
+    else if(type === 'long') longGame();
+    else if(type === 'drag') dragGame();
+}
+
+// 1. 풍선 팡팡 (매우 천천히)
+function tapGame() {
+    document.getElementById("game-title").innerText = "🎈 풍선을 터치해!";
+    function spawn() {
+        if(gameView.style.display === "none") return;
+        const b = document.createElement("div");
+        b.className = "obj";
+        b.innerHTML = "🎈";
+        b.style.left = (Math.random()*80 + 5) + "%";
+        b.style.top = "100%";
+        gameView.appendChild(b);
+
+        let pos = 100;
+        let speed = (Math.random() * 0.3 + 0.2); // 1/3 속도로 고정
+        let ani = setInterval(() => {
+            pos -= speed;
+            b.style.top = pos + "%";
+            if(pos < -15) { clearInterval(ani); b.remove(); spawn(); }
+        }, 30);
+        gameIntervals.push(ani);
+
+        b.onpointerdown = () => {
+            clearInterval(ani);
+            b.classList.add("popped");
+            addSticker();
+            setTimeout(() => { b.remove(); spawn(); }, 300);
+        };
+    }
+    for(let i=0; i<3; i++) spawn();
+}
+
+// 2. 친구 깨우기
+function doubleGame() {
+    document.getElementById("game-title").innerText = "😴 두 번 눌러 깨워줘!";
+    function spawn() {
+        const o = document.createElement("div");
+        o.className = "obj";
+        o.innerHTML = "😴";
+        o.style.left = (Math.random()*70+10) + "%";
+        o.style.top = (Math.random()*60+20) + "%";
+        gameView.appendChild(o);
+
+        let count = 0;
+        o.onpointerdown = () => {
+            count++;
+            o.style.transform = "scale(1.3)";
+            setTimeout(()=> o.style.transform="scale(1)", 100);
+            if(count === 2) {
+                o.innerHTML = ["🦁", "🐰", "🐼", "🦊"][Math.floor(Math.random()*4)];
+                addSticker();
+                setTimeout(()=> { o.remove(); spawn(); }, 800);
+            }
+        };
+    }
+    spawn(); spawn();
+}
+
+// 3. 바다 탐험 (다양한 생물 추가)
+function scrollGame() {
+    document.getElementById("game-title").innerText = "🌊 아래로 헤엄쳐요!";
+    gameView.style.overflowY = "auto";
+    const sea = document.createElement("div");
+    sea.style.height = "4000px";
+    sea.style.background = "linear-gradient(#a1c4fd, #45aaf2, #0984e3, #000033)";
+    gameView.appendChild(sea);
+
+    const creatures = ["🐟","🐠","🐡","🐙","🦑","🦐","🦀","🐚","🐋","🐬","🐳","🦈","🐢","🪼"];
+    for(let i=0; i<50; i++) {
+        let f = document.createElement("div");
+        f.innerHTML = `<span class="swimming">${creatures[Math.floor(Math.random()*creatures.length)]}</span>`;
+        f.style.position = "absolute";
+        f.style.fontSize = (Math.random()*30 + 40) + "px";
+        f.style.left = Math.random()*85 + "%";
+        f.style.top = (Math.random()*3700 + 300) + "px";
+        sea.appendChild(f);
+    }
+
+    let lastS = 0;
+    gameView.onscroll = () => {
+        let cur = gameView.scrollTop;
+        if(cur > lastS + 700) {
+            addSticker();
+            lastS = cur;
+        }
+    };
+}
+
+// 4. 선물상자 열기
+function longGame() {
+    document.getElementById("game-title").innerText = "🎁 꾹~ 누르고 있어봐!";
+    function spawn() {
+        if(gameView.style.display === "none") return;
+        const box = document.createElement("div");
+        box.className = "obj";
+        box.innerHTML = "🎁";
+        box.style.left = (Math.random()*70+10) + "%";
+        box.style.top = (Math.random()*60+20) + "%";
+        
+        const bg = document.createElement("div");
+        bg.className = "prog-bg";
+        const fill = document.createElement("div");
+        fill.className = "prog-fill";
+        bg.appendChild(fill);
+        box.appendChild(bg);
+        gameView.appendChild(box);
+
+        let pressTimer;
+        let p = 0;
+        const start = (e) => {
+            e.preventDefault();
+            bg.style.display = "block";
+            pressTimer = setInterval(() => {
+                p += 5;
+                fill.style.width = p + "%";
+                if(p >= 100) {
+                    clearInterval(pressTimer);
+                    box.innerHTML = "💎";
+                    addSticker();
+                    setTimeout(() => { if(box.parentNode) { box.remove(); spawn(); } }, 1000);
+                }
+            }, 50);
+            gameIntervals.push(pressTimer);
+        };
+        const stop = () => { clearInterval(pressTimer); p = 0; fill.style.width = "0%"; bg.style.display = "none"; };
+        box.onpointerdown = start;
+        box.onpointerup = stop;
+        box.onpointerleave = stop;
+    }
+    spawn();
+}
+
+// 5. 슈팅 골인 (골대 위치 랜덤 & 공 디자인 강화)
+function dragGame() {
+    document.getElementById("game-title").innerText = "⚽ 골대로 드래그!";
+    
+    const goal = document.createElement("div");
+    goal.className = "goal";
+    goal.innerHTML = "🥅";
+    gameView.appendChild(goal);
+
+    function moveGoal() {
+        goal.style.right = (Math.random() * 10 + 5) + "%";
+        goal.style.top = (Math.random() * 60 + 20) + "%";
+    }
+    moveGoal();
+
+    function spawn() {
+        if(gameView.style.display === "none") return;
+        const ballCont = document.createElement("div");
+        ballCont.className = "obj";
+        ballCont.innerHTML = `<div class="fancy-ball">⚽</div>`;
+        ballCont.style.left = "10%";
+        ballCont.style.top = "45%";
+        gameView.appendChild(ballCont);
+
+        let active = false;
+        ballCont.onpointerdown = (e) => {
+            active = true;
+            ballCont.setPointerCapture(e.pointerId);
+        };
+
+        ballCont.onpointermove = (e) => {
+            if(!active) return;
+            ballCont.style.left = (e.clientX - 40) + "px";
+            ballCont.style.top = (e.clientY - 40) + "px";
+
+            let b = ballCont.getBoundingClientRect();
+            let g = goal.getBoundingClientRect();
+
+            if(b.right > g.left + 30 && b.left < g.right - 30 && 
+               b.bottom > g.top + 30 && b.top < g.bottom - 30) {
+                active = false;
+                goal.classList.add("glow");
+                addSticker();
+                ballCont.remove();
+                setTimeout(() => { 
+                    goal.classList.remove("glow"); 
+                    moveGoal(); // 골대 위치 변경
+                    spawn(); 
+                }, 800);
+            }
+        };
+        ballCont.onpointerup = () => { active = false; };
+    }
+    spawn();
+}
+</script>
+
+</body>
+</html>
